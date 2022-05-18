@@ -8,19 +8,28 @@
 import UIKit
 
 /*
+ uisearchtextfield
+ uisearchbar
+ 
+ https://www.boostcourse.org/mo326/project/24/content/22
+ 
  기본적으로 VC에 UINavigationItem(navigationItem)이 있다.
+ https://developer.apple.com/documentation/uikit/uisearchtextfield
+ https://developer.apple.com/documentation/uikit/uisearchtoken
+ https://developer.apple.com/documentation/uikit/uisearchtextfielddelegate
+ https://developer.apple.com/design/human-interface-guidelines/ios/bars/search-bars/
  */
 
 class MainViewController: UIViewController {
     
-    // MARK: - View
-    private lazy var rightButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTap))
+    lazy var resultsTableController = SearchResultViewController()
     
+    // MARK: - View
     private lazy var naviBarAppear = UINavigationBarAppearance().then {
         $0.backgroundColor = .clear // .gray
     }
     
-    lazy var searchController = UISearchController(searchResultsController: SearchResultViewController()).then {
+    lazy var searchController = UISearchController(searchResultsController: resultsTableController).then {
         $0.searchBar.autocapitalizationType = .none
         $0.searchBar.searchTextField.placeholder = "최소 평점을 입력하세요 (0~9)"
         $0.searchBar.returnKeyType = .done
@@ -45,27 +54,26 @@ class MainViewController: UIViewController {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupLayout()
-        
-        
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupNavigationBar()
         setupLayout()
-        setNaviBar()
     }
     
     
     // MARK: - Method
-    private func setNaviBar(isSearch: Bool = true) {
-        if isSearch {
-            setSearchController()
-        } else {
-            title = "홈"
-            navigationItem.rightBarButtonItem = rightButton
-        }
+    private func setupNavigationBar() {
+        navigationItem.title = "Movie"
+        navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false
         
+        searchController.searchResultsUpdater = self
+        searchController.delegate = self
+        searchController.searchBar.delegate = self
         
+        definesPresentationContext = true
     }
     
     private func setupLayout() {
@@ -85,37 +93,43 @@ class MainViewController: UIViewController {
         ])
     }
     
-    private func setSearchController() {
-        navigationItem.title = "Movie"
-        navigationItem.searchController = searchController
-        navigationItem.hidesSearchBarWhenScrolling = false
-        
-        searchController.searchResultsUpdater = self
-        searchController.delegate = self
-        searchController.searchBar.delegate = self
-        
-        definesPresentationContext = true
-
+    func setupResultController() {
+        if searchController.searchBar.searchTextField.tokens.isEmpty {
+            resultsTableController.tableView.delegate = resultsTableController
+        }
     }
     
-    @objc
-    func addTap() {
-        print("Add Tap")
-    }
-    
-    @objc fileprivate func goToProfileVC(){
-        let vc = UIViewController()
-        self.navigationController?.pushViewController(vc, animated: true)
-        
-    }
 }
 
 extension MainViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
-        searchController.searchBar.text = "dsdsd"
+        guard let text = searchController.searchBar.text else { return }
+        
     }
 }
 
-extension MainViewController: UISearchControllerDelegate, UISearchBarDelegate {
+extension MainViewController: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.isEmpty ?? false {
+            
+        } else {
+            
+        }
+        
+        //resultsTableController.showSuggestedSearches = false
+    }
     
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchController.dismiss(animated: true, completion: nil)
+        searchBar.text = ""
+    }
+}
+
+
+extension MainViewController: UISearchControllerDelegate {
+    
+    func presentSearchController(_ searchController: UISearchController) {
+        searchController.showsSearchResultsController = true
+        
+    }
 }
